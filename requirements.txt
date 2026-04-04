@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+dagshub
+mlflow
+dvc[s3]  # DagsHub uses S3-compatible storage for DVC
+transformers
+pandas
+scikit-learn
