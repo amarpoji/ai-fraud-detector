@@ -1,8 +1,19 @@
-fastapi
-uvicorn
-dagshub
-mlflow
 dvc[s3]  # DagsHub uses S3-compatible storage for DVC
+
+# Core ML Libraries
+torch --index-url https://download.pytorch.org/whl/cpu
 transformers
+huggingface_hub
+
+# Data & Analysis
 pandas
 scikit-learn
+seaborn
+tqdm
+ipywidgets
+
+# API & Tracking
+fastapi
+uvicorn
+mlflow
+dagshub
