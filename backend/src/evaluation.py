@@ -16,7 +16,7 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              roc_auc_score, roc_curve)
 
 
-def load_config(config_path='params_new.yml'):
+def load_config(config_path='params.yaml'):
     """Load configuration from YAML file."""
     try:
         with open(config_path, 'r') as f:
@@ -189,7 +189,7 @@ def main():
     print("🚀 EMAIL PHISHING DETECTION - MODEL EVALUATION")
     print("="*80)
     
-    config = load_config('params_new.yml')
+    config = load_config('params.yaml')
     
     # Get data paths
     data_config = config.get('data', {})
@@ -253,14 +253,14 @@ def main():
     print("📊 EVALUATION SUMMARY")
     print(f"{'='*80}")
     
-    if evaluation_results:
-        eval_df = pd.DataFrame(evaluation_results).T
+    eval_df = pd.DataFrame(evaluation_results).T if evaluation_results else pd.DataFrame()
+    if not eval_df.empty:
         print("\n" + eval_df.to_string())
-        
-        # Save report
-        report_path = Path("mlflow_artifacts") / f"evaluation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        eval_df.to_csv(report_path)
-        print(f"\n✓ Evaluation report saved to {report_path}")
+
+    # Always save report to the static DVC output path
+    report_path = Path("mlflow_artifacts") / "evaluation_report.csv"
+    eval_df.to_csv(report_path)
+    print(f"\n✓ Evaluation report saved to {report_path}")
     
     print(f"\n{'='*80}")
     print(f"✓ Evaluation completed!")

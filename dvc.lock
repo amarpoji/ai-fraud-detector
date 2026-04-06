@@ -1,0 +1,130 @@
+schema: '2.0'
+stages:
+  transform:
+    cmd: python backend/src/data_transform.py
+    deps:
+    - path: backend/data/raw/email_dataset.csv
+      hash: md5
+      md5: 5c095d4ff614c67143ffafcad9ea8162
+      size: 2721719
+    - path: backend/src/data_transform.py
+      hash: md5
+      md5: 3ed5b75f2b467f7899d8ec724f78ffa2
+      size: 3767
+    params:
+      params.yaml:
+        data.processed_path: backend/data/processed/email_dataset_processed.csv
+        data.raw_path: backend/data/raw/email_dataset.csv
+    outs:
+    - path: backend/data/processed/email_dataset_processed.csv
+      hash: md5
+      md5: 6ba8b164c8b5dccb8d37aabc2efc11ab
+      size: 4588300
+  train:
+    cmd: python backend/src/training.py
+    deps:
+    - path: backend/data/processed/email_dataset_processed.csv
+      hash: md5
+      md5: 6ba8b164c8b5dccb8d37aabc2efc11ab
+      size: 4588300
+    - path: backend/src/data_transform.py
+      hash: md5
+      md5: 3ed5b75f2b467f7899d8ec724f78ffa2
+      size: 3767
+    - path: backend/src/training.py
+      hash: md5
+      md5: 4418b0004cf71a1c2f076a8193413e69
+      size: 8510
+    - path: params.yaml
+      hash: md5
+      md5: b7d75d5b577d879663384ca91bf3296a
+      size: 1050
+    params:
+      params.yaml:
+        data.processed_path: backend/data/processed/email_dataset_processed.csv
+        mlflow:
+          experiment_name: email-phishing-detection
+          run_name_prefix: phishing-detector
+          track_model_signature: true
+          register_model: true
+          model_registry_name: fraud-detector-model
+        model_variants:
+          RandomForest_v1:
+            type: RandomForest
+            n_estimators: 100
+            max_depth: 15
+            random_state: 42
+            n_jobs: -1
+          RandomForest_v2:
+            type: RandomForest
+            n_estimators: 200
+            max_depth: 20
+            random_state: 42
+            n_jobs: -1
+          LogisticRegression_v1:
+            type: LogisticRegression
+            C: 1.0
+            random_state: 42
+          LogisticRegression_v2:
+            type: LogisticRegression
+            C: 0.1
+            random_state: 42
+          NaiveBayes_v1:
+            type: NaiveBayes
+            alpha: 1.0
+        preprocessing:
+          train_test_split: 0.2
+          max_features: 5000
+          ngram_range:
+          - 1
+          - 2
+          random_state: 42
+    outs:
+    - path: mlflow_artifacts/training_info.json
+      hash: md5
+      md5: 8e11600c53dd7f6d30b23ee229b90d23
+      size: 484
+  evaluate:
+    cmd: python backend/src/evaluation.py
+    deps:
+    - path: backend/data/processed/email_dataset_processed.csv
+      hash: md5
+      md5: 6ba8b164c8b5dccb8d37aabc2efc11ab
+      size: 4588300
+    - path: backend/src/data_transform.py
+      hash: md5
+      md5: 3ed5b75f2b467f7899d8ec724f78ffa2
+      size: 3767
+    - path: backend/src/evaluation.py
+      hash: md5
+      md5: b4dfd904130bb5bfd0ae0aaaf1d875bf
+      size: 9344
+    - path: mlflow_artifacts/training_info.json
+      hash: md5
+      md5: 8e11600c53dd7f6d30b23ee229b90d23
+      size: 484
+    - path: params.yaml
+      hash: md5
+      md5: b7d75d5b577d879663384ca91bf3296a
+      size: 1050
+    params:
+      params.yaml:
+        data.processed_path: backend/data/processed/email_dataset_processed.csv
+        mlflow:
+          experiment_name: email-phishing-detection
+          run_name_prefix: phishing-detector
+          track_model_signature: true
+          register_model: true
+          model_registry_name: fraud-detector-model
+        preprocessing:
+          train_test_split: 0.2
+          max_features: 5000
+          ngram_range:
+          - 1
+          - 2
+          random_state: 42
+    outs:
+    - path: mlflow_artifacts/evaluation_report.csv
+      hash: md5
+      md5: 1e2f4e09563907db7c90da0c9c211874
+      size: 498

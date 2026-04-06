@@ -12,7 +12,7 @@ nltk.download('punkt_tab', quiet=True)
 nltk.download('stopwords', quiet=True)
 
 
-def load_config(config_path='params.yml'):
+def load_config(config_path='params.yaml'):
     """Load configuration from YAML file."""
     try:
         with open(config_path, 'r') as f:
@@ -82,7 +82,7 @@ def transform_data(input_path, output_path=None):
 
 def get_data_paths():
     """Get data paths from config or use defaults."""
-    config = load_config('params.yml')
+    config = load_config('params.yaml')
     
     # Try to get paths from config
     if config and 'data' in config:

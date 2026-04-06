@@ -18,7 +18,7 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import MultinomialNB
 
 
-def load_config(config_path='params_new.yml'):
+def load_config(config_path='params.yaml'):
     """Load configuration from YAML file."""
     try:
         with open(config_path, 'r') as f:
@@ -137,7 +137,7 @@ def log_training_artifacts(model, vectorizer, model_name):
     print(f"   ✓ Model and artifacts logged")
 
 
-def train_single_model(model_name, model_config, X_train_vec, X_test_vec, y_train, config):
+def train_single_model(model_name, model_config, X_train_vec, X_test_vec, y_train,vectorizer, config):
     """Train a single model."""
     print(f"\n{'='*80}")
     print(f"📊 TRAINING: {model_name}")
@@ -159,7 +159,7 @@ def train_single_model(model_name, model_config, X_train_vec, X_test_vec, y_trai
         model = train_model(model_type, X_train_vec, y_train, **model_params)
         
         # Log artifacts
-        log_training_artifacts(model, None, model_name)  # vectorizer already logged separately
+        log_training_artifacts(model, vectorizer, model_name)  # vectorizer already logged separately
         
         print(f"\n✓ Training completed for {model_name}")
         
@@ -172,7 +172,7 @@ def main():
     print("🚀 EMAIL PHISHING DETECTION - MODEL TRAINING")
     print("="*80)
     
-    config = load_config('params_new.yml')
+    config = load_config('params.yaml')
     
     # Get data paths
     data_config = config.get('data', {})
@@ -220,7 +220,7 @@ def main():
         try:
             model, run_id = train_single_model(
                 model_name, model_config,
-                X_train_vec, X_test_vec, y_train, config
+                X_train_vec, X_test_vec, y_train,vectorizer, config
             )
             training_results[model_name] = {
                 'model': model,

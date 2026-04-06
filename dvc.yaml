@@ -9,8 +9,6 @@ stages:
     params:
       - data.raw_path
       - data.processed_path
-    plots: []
-    metrics: []
 
   train:
     cmd: python backend/src/training.py
@@ -18,21 +16,14 @@ stages:
       - backend/data/processed/email_dataset_processed.csv
       - backend/src/training.py
       - backend/src/data_transform.py
-      - params_new.yml
+      - params.yaml
     outs:
-      - mlflow_artifacts/training_info.json:
-          cache: false
+      - mlflow_artifacts/training_info.json
     params:
       - data.processed_path
       - preprocessing
       - model_variants
       - mlflow
-    metrics:
-      - mlflow_artifacts/training_metrics.json:
-          cache: false
-    env:
-      MLFLOW_TRACKING_URI:
-        desc: MLflow tracking server URI
 
   evaluate:
     cmd: python backend/src/evaluation.py
@@ -40,34 +31,12 @@ stages:
       - backend/data/processed/email_dataset_processed.csv
       - backend/src/evaluation.py
       - backend/src/data_transform.py
-      - params_new.yml
+      - params.yaml
       - mlflow_artifacts/training_info.json
     outs:
-      - mlflow_artifacts/evaluation_report.csv:
-          cache: false
+      - mlflow_artifacts/evaluation_report.csv
     params:
       - data.processed_path
       - preprocessing
       - mlflow
-    metrics:
-      - mlflow_artifacts/evaluation_metrics.json:
-          cache: false
-    plots:
-      - mlflow_artifacts/evaluation_confusion_matrix.json:
-          template: confusion
-          x: actual
-          y: predicted
 
-metrics:
-  - mlflow_artifacts/metrics.json:
-      cache: false
-      desc: MLflow metrics
-
-plots:
-  - mlflow_artifacts/metrics.json:
-      cache: false
-
-remote:
-  myremote:
-    url: s3://your-bucket/ai-fraud-detector
-    jobs: 4
