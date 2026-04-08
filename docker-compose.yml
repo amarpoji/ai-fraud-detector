@@ -1,0 +1,70 @@
+services:
+  # Backend - FastAPI + ML Model
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: phishing_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MLFLOW_TRACKING_URI=sqlite:///mlflow.db
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    volumes:
+      - ./backend:/app/backend
+      - ./backend/data:/app/data
+      - ./mlruns:/app/mlruns
+      - ./mlflow_artifacts:/app/mlflow_artifacts
+    command: uvicorn src.app:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - phishing_network
+
+  # Frontend - React + Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: phishing_frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - phishing_network
+
+  # Optional: MLflow UI for monitoring
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: phishing_mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+      - ./mlflow_artifacts:/mlflow/mlflow_artifacts
+    command: mlflow ui --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db
+    networks:
+      - phishing_network
+
+networks:
+  phishing_network:
+    driver: bridge
+
+volumes:
+  backend_data:
+  mlflow_data:

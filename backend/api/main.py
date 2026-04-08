@@ -11,13 +11,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+@app.get("/models")
+async def get_models():
+    # Mock models for now
+    return {"models": ["RandomForest_v1_tfidf_v1", "LogisticRegression_v1_tfidf_v1", "NaiveBayes_v1_tfidf_v1"]}
+
 @app.post("/analyze")
 async def analyze(data: dict):
     # Mock data for now
-    text = data.get("text", "")
+    message = data.get("message", "")
+    model_name = data.get("model_name", "")
+    
+    # Mock prediction
+    risk_score = 75.0  # Mock score
+    label = "Phishing" if risk_score > 50 else "Legitimate"
+    explanation = f"Analysis by {model_name}: This message shows suspicious patterns."
+    red_flags = ["urgent language", "suspicious link"] if risk_score > 50 else []
+    
     return {
-        "score": 0.85,
-        "label": "High Risk",
-        "red_flags": ["urgent", "bit.ly/fake-link"],
-        "reason": "This message uses urgent language and a suspicious short-link."
+        "risk_score": risk_score,
+        "label": label,
+        "explanation": explanation,
+        "red_flags": red_flags
     }

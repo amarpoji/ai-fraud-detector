@@ -17,9 +17,6 @@ fastapi
 uvicorn
 python-multipart
 pydantic
-
-# Frontend
-streamlit
 requests
 
 # Data Visualization & Analysis
