@@ -22,14 +22,16 @@ async def get_models():
 
 @app.post("/analyze")
 async def analyze(data: dict):
-    # Mock data for now
+    # Change 'model_name' to 'model_run_id' to match your React code!
     message = data.get("message", "")
-    model_name = data.get("model_name", "")
+    run_id = data.get("model_run_id", "default_model") # Matches App.jsx
     
     # Mock prediction
-    risk_score = 75.0  # Mock score
+    risk_score = 75.0
     label = "Phishing" if risk_score > 50 else "Legitimate"
-    explanation = f"Analysis by {model_name}: This message shows suspicious patterns."
+    
+    # Use run_id here instead of model_name
+    explanation = f"Analysis by model {run_id}: This message shows suspicious patterns."
     red_flags = ["urgent language", "suspicious link"] if risk_score > 50 else []
     
     return {

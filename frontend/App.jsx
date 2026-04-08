@@ -39,7 +39,14 @@ const RiskGauge = ({ score }) => {
 };
 
 const RedFlagBadge = ({ flag }) => (
-  <Chip icon={<WarningIcon sx={{ fontSize: 18 }} />} label={flag} color="error" variant="outlined" sx={{ margin: 0.5 }} />
+  <Chip 
+    icon={<WarningIcon sx={{ fontSize: 18 }} />} 
+    label={flag.category || flag} 
+    title={flag.description || ''} 
+    color="error" 
+    variant="outlined" 
+    sx={{ margin: 0.5 }} 
+  />
 );
 
 function App() {
@@ -70,8 +77,10 @@ function App() {
       const response = await fetch(`${API_BASE_URL}/models`);
       if (response.ok) {
         const data = await response.json();
-        setAvailableModels(data.models || []);
-        if (data.models && data.models.length > 0) setSelectedModel(data.models[0]);
+        const models = data.models || [];
+        setAvailableModels(models);
+        // choose run_id as the value used for requests
+        if (models.length > 0) setSelectedModel(models[0].run_id);
       }
     } catch (err) {
       console.error('Failed to fetch models:', err);
@@ -90,7 +99,7 @@ function App() {
       const response = await fetch(`${API_BASE_URL}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, model_name: selectedModel }),
+        body: JSON.stringify({ message, model_run_id: selectedModel }),
       });
       if (!response.ok) throw new Error('Analysis failed');
       const data = await response.json();
@@ -124,7 +133,9 @@ function App() {
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Select Model</InputLabel>
               <Select value={selectedModel} label="Select Model" onChange={(e) => setSelectedModel(e.target.value)}>
-                {availableModels.map((model) => <MenuItem key={model} value={model}>{model}</MenuItem>)}
+                {availableModels.map((model) => (
+                  <MenuItem key={model.run_id} value={model.run_id}>{model.name}</MenuItem>
+                ))}
               </Select>
             </FormControl>
             <TextField fullWidth multiline rows={6} placeholder="Paste message..." value={message} onChange={(e) => setMessage(e.target.value)} variant="outlined" sx={{ mb: 2 }} />

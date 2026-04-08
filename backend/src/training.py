@@ -268,6 +268,24 @@ def train_single_model(model_name, model_config, X_train, X_test, y_train, y_tes
         mlflow.log_artifact(vectorizer_path)
         os.remove(vectorizer_path)
         
+        run_id = mlflow.active_run().info.run_id
+        
+        # Also save model and vectorizer locally for direct loading
+        model_dir = Path("mlflow_artifacts") / f"{model_name}_{tfidf_name}"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save model
+        model_pkl_path = model_dir / "model.pkl"
+        with open(model_pkl_path, 'wb') as f:
+            pickle.dump(model, f)
+        
+        # Save vectorizer
+        vec_pkl_path = model_dir / "vectorizer.pkl"
+        with open(vec_pkl_path, 'wb') as f:
+            pickle.dump(vectorizer, f)
+        
+        print(f"✓ Saved model and vectorizer locally to {model_dir}")
+        
         # Print metrics summary
         print(f"\n📊 Test Metrics:")
         print(f"   Accuracy:  {test_metrics['accuracy']:.4f}")
@@ -280,8 +298,6 @@ def train_single_model(model_name, model_config, X_train, X_test, y_train, y_tes
         print(f"   CV Accuracy:  {cv_metrics['cv_accuracy_mean']:.4f} ± {cv_metrics['cv_accuracy_std']:.4f}")
         print(f"   CV F1-Score:  {cv_metrics['cv_f1_mean']:.4f} ± {cv_metrics['cv_f1_std']:.4f}")
         print(f"   CV ROC-AUC:   {cv_metrics['cv_roc_auc_mean']:.4f} ± {cv_metrics['cv_roc_auc_std']:.4f}")
-        
-        run_id = mlflow.active_run().info.run_id
         
         return {
             'model_name': model_name,

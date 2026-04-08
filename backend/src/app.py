@@ -84,33 +84,67 @@ class ModelCache:
         self.best_run_id = None
     
     def load_model(self, run_id: str):
-        """Load model from MLflow"""
+        """Load model and vectorizer from saved pickle files"""
         if run_id in self.models:
             return self.models[run_id], self.vectorizers[run_id]
         
         try:
-            model_uri = f"runs:/{run_id}/model"
-            model = mlflow.sklearn.load_model(model_uri)
+            # Get training info to find the experiment details for this run_id
+            artifacts_dir = Path("mlflow_artifacts")
+            training_info_path = artifacts_dir / "training_info.json"
             
-            # Try to load vectorizer from artifacts
-            try:
-                vectorizer_path = mlflow.artifacts.download_artifacts(
-                    artifact_uri=f"runs:/{run_id}/vectorizer.pkl"
+            if not training_info_path.exists():
+                raise HTTPException(
+                    status_code=500,
+                    detail="Training info not found. Run training.py first."
                 )
-                with open(vectorizer_path, 'rb') as f:
+            
+            with open(training_info_path, 'r') as f:
+                training_info = json.load(f)
+            
+            # Find the experiment result matching this run_id
+            run_result = None
+            for result in training_info['results']:
+                if result['run_id'] == run_id:
+                    run_result = result
+                    break
+            
+            if not run_result:
+                raise ValueError(f"Run ID {run_id} not found in training results")
+            
+            # Construct the model directory path
+            model_dir = artifacts_dir / f"{run_result['model_name']}_{run_result['tfidf_variant']}"
+            
+            # Load model and vectorizer from pickle files
+            model_file = model_dir / "model.pkl"
+            vectorizer_file = model_dir / "vectorizer.pkl"
+            
+            if not model_file.exists():
+                raise FileNotFoundError(f"Model file not found: {model_file}")
+            
+            with open(model_file, 'rb') as f:
+                model = pickle.load(f)
+            
+            vectorizer = None
+            if vectorizer_file.exists():
+                with open(vectorizer_file, 'rb') as f:
                     vectorizer = pickle.load(f)
-            except:
-                print(f"⚠ Could not load vectorizer from run {run_id}")
-                vectorizer = None
+                print(f"✓ Loaded model and vectorizer from {model_dir}")
+            else:
+                print(f"⚠ Vectorizer not found at {vectorizer_file}")
             
             self.models[run_id] = model
             self.vectorizers[run_id] = vectorizer
             
             return model, vectorizer
+        
+        except HTTPException:
+            raise
         except Exception as e:
+            print(f"Error loading model {run_id}: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to load model from MLflow: {str(e)}"
+                detail=f"Failed to load model: {str(e)}"
             )
     
     def get_best_model(self):
