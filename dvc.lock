@@ -9,8 +9,8 @@ stages:
       size: 2721719
     - path: backend/src/data_transform.py
       hash: md5
-      md5: 3ed5b75f2b467f7899d8ec724f78ffa2
-      size: 3767
+      md5: 4838d0b3d6e7b1fa743320d8bac4a515
+      size: 4713
     params:
       params.yaml:
         data.processed_path: backend/data/processed/email_dataset_processed.csv
@@ -18,27 +18,27 @@ stages:
     outs:
     - path: backend/data/processed/email_dataset_processed.csv
       hash: md5
-      md5: 6ba8b164c8b5dccb8d37aabc2efc11ab
-      size: 4588300
+      md5: ff107a053d94d87ff5d8a08ec72c5a03
+      size: 4589036
   train:
     cmd: python backend/src/training.py
     deps:
     - path: backend/data/processed/email_dataset_processed.csv
       hash: md5
-      md5: 6ba8b164c8b5dccb8d37aabc2efc11ab
-      size: 4588300
+      md5: ff107a053d94d87ff5d8a08ec72c5a03
+      size: 4589036
     - path: backend/src/data_transform.py
       hash: md5
-      md5: 3ed5b75f2b467f7899d8ec724f78ffa2
-      size: 3767
+      md5: 4838d0b3d6e7b1fa743320d8bac4a515
+      size: 4713
     - path: backend/src/training.py
       hash: md5
-      md5: 4418b0004cf71a1c2f076a8193413e69
-      size: 8510
+      md5: 0d54e5084811c2116e867e936886d94f
+      size: 14824
     - path: params.yaml
       hash: md5
-      md5: b7d75d5b577d879663384ca91bf3296a
-      size: 1050
+      md5: d4a19972803f3e3983e832b8b8f4100a
+      size: 1751
     params:
       params.yaml:
         data.processed_path: backend/data/processed/email_dataset_processed.csv
@@ -48,65 +48,99 @@ stages:
           track_model_signature: true
           register_model: true
           model_registry_name: fraud-detector-model
+          track_important_metrics:
+          - accuracy
+          - precision
+          - recall
+          - f1_score
+          - roc_auc
+          - training_time
         model_variants:
           RandomForest_v1:
             type: RandomForest
             n_estimators: 100
             max_depth: 15
+            min_samples_split: 5
+            min_samples_leaf: 2
             random_state: 42
             n_jobs: -1
+            criterion: gini
           RandomForest_v2:
             type: RandomForest
             n_estimators: 200
             max_depth: 20
+            min_samples_split: 3
+            min_samples_leaf: 1
             random_state: 42
             n_jobs: -1
           LogisticRegression_v1:
             type: LogisticRegression
             C: 1.0
+            solver: lbfgs
+            max_iter: 1000
             random_state: 42
           LogisticRegression_v2:
             type: LogisticRegression
             C: 0.1
+            solver: liblinear
+            max_iter: 1000
             random_state: 42
           NaiveBayes_v1:
             type: NaiveBayes
             alpha: 1.0
         preprocessing:
           train_test_split: 0.2
-          max_features: 5000
-          ngram_range:
-          - 1
-          - 2
           random_state: 42
+          tfidf_variants:
+            tfidf_v1:
+              max_features: 5000
+              ngram_range:
+              - 1
+              - 2
+              min_df: 2
+              max_df: 0.95
+            tfidf_v2:
+              max_features: 3000
+              ngram_range:
+              - 1
+              - 3
+              min_df: 1
+              max_df: 0.9
+            tfidf_v3:
+              max_features: 10000
+              ngram_range:
+              - 1
+              - 2
+              min_df: 1
+              max_df: 0.95
     outs:
     - path: mlflow_artifacts/training_info.json
       hash: md5
-      md5: 8e11600c53dd7f6d30b23ee229b90d23
-      size: 484
+      md5: b6548836190c37998fe43f57cd2908b3
+      size: 3953
   evaluate:
     cmd: python backend/src/evaluation.py
     deps:
     - path: backend/data/processed/email_dataset_processed.csv
       hash: md5
-      md5: 6ba8b164c8b5dccb8d37aabc2efc11ab
-      size: 4588300
+      md5: ff107a053d94d87ff5d8a08ec72c5a03
+      size: 4589036
     - path: backend/src/data_transform.py
       hash: md5
-      md5: 3ed5b75f2b467f7899d8ec724f78ffa2
-      size: 3767
+      md5: 4838d0b3d6e7b1fa743320d8bac4a515
+      size: 4713
     - path: backend/src/evaluation.py
       hash: md5
-      md5: b4dfd904130bb5bfd0ae0aaaf1d875bf
-      size: 9344
+      md5: 068572ee1627f164a6757bb34f7663ed
+      size: 11661
     - path: mlflow_artifacts/training_info.json
       hash: md5
-      md5: 8e11600c53dd7f6d30b23ee229b90d23
-      size: 484
+      md5: b6548836190c37998fe43f57cd2908b3
+      size: 3953
     - path: params.yaml
       hash: md5
-      md5: b7d75d5b577d879663384ca91bf3296a
-      size: 1050
+      md5: d4a19972803f3e3983e832b8b8f4100a
+      size: 1751
     params:
       params.yaml:
         data.processed_path: backend/data/processed/email_dataset_processed.csv
@@ -116,15 +150,40 @@ stages:
           track_model_signature: true
           register_model: true
           model_registry_name: fraud-detector-model
+          track_important_metrics:
+          - accuracy
+          - precision
+          - recall
+          - f1_score
+          - roc_auc
+          - training_time
         preprocessing:
           train_test_split: 0.2
-          max_features: 5000
-          ngram_range:
-          - 1
-          - 2
           random_state: 42
+          tfidf_variants:
+            tfidf_v1:
+              max_features: 5000
+              ngram_range:
+              - 1
+              - 2
+              min_df: 2
+              max_df: 0.95
+            tfidf_v2:
+              max_features: 3000
+              ngram_range:
+              - 1
+              - 3
+              min_df: 1
+              max_df: 0.9
+            tfidf_v3:
+              max_features: 10000
+              ngram_range:
+              - 1
+              - 2
+              min_df: 1
+              max_df: 0.95
     outs:
     - path: mlflow_artifacts/evaluation_report.csv
       hash: md5
-      md5: 1e2f4e09563907db7c90da0c9c211874
-      size: 498
+      md5: 1442d0e50c09c0db4c50036c1393c0a9
+      size: 837

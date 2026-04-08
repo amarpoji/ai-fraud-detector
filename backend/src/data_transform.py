@@ -24,24 +24,45 @@ def load_config(config_path='params.yaml'):
 
 def clean_text(text):
     """
-    Clean text by:
-    1. Converting to lowercase
-    2. Removing punctuation/special characters (except URLs)
-    3. Tokenizing into words
-    4. Removing stopwords
+    Advanced text cleaning for phishing detection:
+    1. Remove URLs but keep domain info
+    2. Normalize whitespace and special patterns
+    3. Convert to lowercase
+    4. Tokenize and remove stopwords
+    5. Keep important phishing indicators (currency, numbers)
     """
+    if not isinstance(text, str):
+        return ""
+    
+    # Replace URLs with URL token to preserve URL presence signal
+    text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', 'URL', text)
+    
+    # Replace email addresses with EMAIL token
+    text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', 'EMAIL', text)
+    
+    # Normalize whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
     # Convert to lowercase
     text = text.lower()
     
-    # Remove punctuation except those in URLs
-    text = re.sub(r'[^\w\s:/.)]', '', text)
+    # Remove special characters but keep alphanumeric, space, and special tokens
+    text = re.sub(r'[^a-z0-9\s$€£¥%()[\]\-]', ' ', text)
+    
+    # Normalize repeated characters (e.g., "!!!!" -> "!")
+    text = re.sub(r'(.)\1{2,}', r'\1', text)
     
     # Tokenize
     tokens = word_tokenize(text)
     
-    # Remove stopwords
+    # Remove stopwords but keep important phishing indicators
     stop_words = set(stopwords.words('english'))
-    tokens = [token for token in tokens if token not in stop_words and len(token) > 1]
+    important_tokens = {'url', 'email', 'click', 'verify', 'confirm', 'urgent', 'act', 'now', 'expire'}
+    
+    tokens = [
+        token for token in tokens 
+        if (token not in stop_words or token in important_tokens) and len(token) > 1
+    ]
     
     return " ".join(tokens)
 

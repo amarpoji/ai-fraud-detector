@@ -15,6 +15,12 @@ dagshub
 # API Framework
 fastapi
 uvicorn
+python-multipart
+pydantic
+
+# Frontend
+streamlit
+requests
 
 # Data Visualization & Analysis
 seaborn
@@ -31,3 +37,4 @@ tqdm
 # Development & Utilities
 python-dotenv
 click
+
